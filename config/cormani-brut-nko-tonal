@@ -49,6 +49,7 @@ ATTRIBUTE lemma_lc {
 
 STRUCTURE doc {
     ATTRIBUTE id
+    ATTRIBUTE wordcount
 	ATTRIBUTE text_genre {
         MULTIVALUE yes
         MULTISEP ";"
