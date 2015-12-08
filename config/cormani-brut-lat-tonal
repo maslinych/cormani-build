@@ -1,5 +1,5 @@
 PATH "/var/lib/manatee/data/cormani-brut-lat-tonal"
-VERTICAL "/var/lib/manatee/vert/cormani-brut-lat-tonal.vert"
+VERTICAL "cormani-brut-lat-tonal.vert"
 ENCODING "utf-8"
 LOCALE "emk_GN"
 INFO "Maninka Automatically Parsed corpus (non-disambiguated)\nRelease 0.1, 2015.05.12\nmore info at http://www......"
@@ -25,6 +25,27 @@ ATTRIBUTE parts {
     MULTISEP "|"
 }
 ATTRIBUTE nko
+ATTRIBUTE lc {
+    LABEL "word (lowercase)"
+    DYNAMIC utf8lowercase
+    DYNLIB internal
+    ARG1 "C"
+    FUNTYPE s
+    FROMATTR word
+    TYPE index
+    TRANSQUERY yes
+}
+ATTRIBUTE lemma_lc {
+    LABEL "lemma (lowercase)"
+    DYNAMIC utf8lowercase
+    DYNLIB internal
+    ARG1 "C"
+    FUNTYPE s
+    FROMATTR lemma
+    TYPE index
+    TRANSQUERY yes
+}
+
 
 STRUCTURE doc {
     ATTRIBUTE id

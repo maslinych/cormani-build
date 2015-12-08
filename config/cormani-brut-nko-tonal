@@ -1,5 +1,5 @@
 PATH "/var/lib/manatee/data/cormani-brut-nko-tonal"
-VERTICAL "/var/lib/manatee/vert/cormani-brut-nko-tonal.vert"
+VERTICAL "cormani-brut-nko-tonal.vert"
 ENCODING "utf-8"
 LOCALE "emk_GN"
 RIGHTTOLEFT yes
