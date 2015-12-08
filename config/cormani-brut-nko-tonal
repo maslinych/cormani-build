@@ -1,0 +1,75 @@
+PATH "/var/lib/manatee/data/cormani-brut-nko-tonal"
+VERTICAL "/var/lib/manatee/vert/cormani-brut-nko-tonal.vert"
+ENCODING "utf-8"
+LOCALE "emk_GN"
+RIGHTTOLEFT yes
+INFO "Maninka Automatically Parsed corpus (non-disambiguated)\nRelease 0.1, 2015.05.12\nmore info at http://www......"
+INFOHREF "http://mandelang.org/cormani"
+WPOSLIST ",noun,n,proper noun,n.prop,adjective,adj,numeral,num,verb,v,participle,ptcp,qualitative verb,vq,adverbial,adv.*,conjunction,conj,copula,cop,determinative,dtm,interjection,intj,onomatopoeia,onomat,personal pronoun,pers,predicative marker,pm,postposition,pp,preposition,prep,pronoun,prn,particle,prt"
+
+
+ATTRIBUTE word
+ATTRIBUTE lemma {
+    MULTIVALUE yes
+    MULTISEP "|"
+}
+ATTRIBUTE tag {
+    MULTIVALUE yes
+    MULTISEP "|"
+}
+ATTRIBUTE gloss {
+    MULTIVALUE yes
+    MULTISEP "|"
+    LOCALE "fr_FR"
+}
+ATTRIBUTE parts {
+    MULTIVALUE yes
+    MULTISEP "|"
+}
+ATTRIBUTE lc {
+    LABEL "word (lowercase)"
+    DYNAMIC utf8lowercase
+    DYNLIB internal
+    ARG1 "C"
+    FUNTYPE s
+    FROMATTR word
+    TYPE index
+    TRANSQUERY yes
+}
+ATTRIBUTE lemma_lc {
+    LABEL "lemma (lowercase)"
+    DYNAMIC utf8lowercase
+    DYNLIB internal
+    ARG1 "C"
+    FUNTYPE s
+    FROMATTR lemma
+    TYPE index
+    TRANSQUERY yes
+}
+
+STRUCTURE doc {
+    ATTRIBUTE id
+	ATTRIBUTE text_genre {
+        MULTIVALUE yes
+        MULTISEP ";"
+        HIERARCHICAL " : "
+        DEFAULTVALUE "UNDEF"
+    }
+    ATTRIBUTE source_type
+    ATTRIBUTE source_year
+    ATTRIBUTE text_translation
+    ATTRIBUTE text_medium
+    ATTRIBUTE author_name {
+        MULTIVALUE yes
+        MULTISEP ";"
+    }
+    ATTRIBUTE text_title
+}
+
+
+STRUCTURE p
+STRUCTURE s 
+SHORTREF "=doc.id,#"
+MAXCONTEXT 100
+MAXDETAIL 200
+
