@@ -15,10 +15,6 @@ ATTRIBUTE tag {
     MULTIVALUE yes
     MULTISEP "|"
 }
-ATTRIBUTE form {
-    MULTIVALUE yes
-    MULTISEP "|"
-}
 ATTRIBUTE gloss {
     MULTIVALUE yes
     MULTISEP "|"

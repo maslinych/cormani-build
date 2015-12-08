@@ -1,7 +1,7 @@
 # SETUP PATHS
 ROOT=..
 DABA=$(ROOT)/daba/
-SRC=$(ROOT)/corbama
+SRC=$(ROOT)/cormani
 vpath %.txt $(SRC)
 vpath %.html $(SRC)
 vpath %.dabased $(SRC)
@@ -14,50 +14,58 @@ PORT=222
 TESTING=testing
 TESTPORT=8098
 # UTILS
+MALIDABA=$(ROOT)/malidaba
 BAMADABA=$(ROOT)/bamadaba
 PYTHON=PYTHONPATH=$(DABA) python
-PARSER=$(PYTHON) $(DABA)/mparser.py -s apostrophe 
-daba2vert=$(PYTHON) $(DABA)/ad-hoc/daba2vert.py -v $(BAMADABA)/bamadaba.txt
+PARSER=$(PYTHON) $(DABA)/mparser.py 
+daba2vert=$(PYTHON) $(DABA)/ad-hoc/daba2vert.py -v $(MALIDABA)/malidaba.txt
 dabased=$(PYTHON) $(DABA)/dabased.py -v
 RSYNC=rsync -avP --stats -e "ssh -p $(PORT)"
 gitsrc=git --git-dir=$(SRC)/.git/
 # 
 # EXTERNAL RESOURCES
-grammar=$(DABA)/doc/samples/bamana.gram.txt
-dictionaries := $(addprefix $(BAMADABA)/,bamadaba.txt jamuw.txt togow.txt yorow.txt enciclop.txt)
+grammar=$(MALIDABA)/maninka.nko.gram.txt
+dictionaries := $(addprefix $(MALIDABA)/,malidaba.txt diyalu.txt toolu.txt) $(BAMADABA)/jamuw.txt
 dabafiles := $(addrefix $(DABA),grammar.py formats.py mparser.py newmorph.py)
 # 
 # SOURCE FILELISTS
 auxtxtfiles := freqlist.txt
-dishtmlfiles := $(patsubst $(SRC)/%,%,$(wildcard $(SRC)/*.dis.html $(SRC)/*/*.dis.html $(SRC)/*/*/*.dis.html))
-htmlfiles := $(filter-out %.pars.html %.dis.html,$(patsubst $(SRC)/%,%,$(wildcard $(SRC)/*.html $(SRC)/*/*.html $(SRC)/*/*/*.html)))
+nkohtmlfiles := $(patsubst $(SRC)/%,%,$(wildcard $(SRC)/*.nko.html $(SRC)/*/*.nko.html $(SRC)/*/*/*.nko.html))
 txtfiles := $(patsubst $(SRC)/%,%,$(wildcard $(SRC)/*.txt $(SRC)/*/*.txt $(SRC)/*/*/*.txt))
-srctxtfiles := $(filter-out $(htmlfiles:.html=.txt) $(dishtmlfiles:.dis.html=.txt) $(dishtmlfiles:.dis.html=.old.txt) $(auxtxtfiles) %_fra.txt,$(txtfiles))
-srchtmlfiles := $(filter-out $(dishtmlfiles:.dis.html=.html) $(dishtmlfiles:.dis.html=.old.html),$(htmlfiles))
-parsefiles := $(filter-out %.old.html,$(srchtmlfiles)) $(filter-out %.old.txt,$(srctxtfiles))
-parseoldfiles := $(filter %.old.html,$(srchtmlfiles)) $(filter %.old.txt,$(srctxtfiles))
+htmlfiles := $(filter-out %.pars.html %.dis.html,$(patsubst $(SRC)/%,%,$(wildcard $(SRC)/*.html $(SRC)/*/*.html $(SRC)/*/*/*.html)))
+dishtmlfiles := $(patsubst $(SRC)/%,%,$(wildcard $(SRC)/*.dis.html $(SRC)/*/*.dis.html $(SRC)/*/*/*.dis.html))
+srctxtfiles := $(filter-out $(htmlfiles:.html=.txt) $(dishtmlfiles:.dis.html=.txt) $(dishtmlfiles:.dis.html=.nko.txt) $(auxtxtfiles) %_fra.txt,$(txtfiles))
+srchtmlfiles := $(filter-out $(dishtmlfiles:.dis.html=.html) $(dishtmlfiles:.dis.html=.nko.html),$(htmlfiles))
+parsenkofiles := $(filter %.nko.html,$(srchtmlfiles)) $(filter %.nko.txt,$(srctxtfiles))
 dabasedfiles := $(sort $(wildcard releases/*/*.dabased))
-parshtmlfiles := $(addsuffix .pars.html,$(basename $(parsefiles) $(parseoldfiles)))
+parshtmlfiles := $(addsuffix .pars.html,$(basename $(parsenkofiles)))
 netfiles := $(patsubst %.html,%,$(dishtmlfiles))
 brutfiles := $(netfiles) $(patsubst %.html,%,$(parshtmlfiles))
 
-corpora := corbama-net-non-tonal corbama-net-tonal corbama-brut corbama-nul 
+corpora := cormani-brut-nko-non-tonal cormani-brut-nko-tonal cormani-brut-lat-non-tonal cormani-brut-lat-tonal
 corpora-vert := $(addsuffix .vert, $(corpora))
 compiled := $(patsubst %,export/data/%/word.lex,$(corpora))
 
 .PRECIOUS: $(parshtmlfiles)
 
 test:
-	@echo $(netfiles) | tr ' ' '\n'
+	$(info $(brutfiles))
+
+print-%:
+	$(info $*=$($*))
 
 %.pars.tonal.vert: %.pars.html
-	$(daba2vert) "$<" --tonel --unique --convert --polisemy > "$@"
+	$(daba2vert) "$<" --tonal > "$@"
 	
 %.pars.non-tonal.vert: %.pars.html
-	$(daba2vert) "$<" --unique --convert --polisemy > "$@"
+	$(daba2vert) "$<" --unique  > "$@"
 
-%.pars.nul.vert: %.pars.html
-	$(daba2vert) "$<" --unique --null --convert > "$@"
+%.pars.lat.vert: %.pars.html
+	$(daba2vert) "$<" --unique --convert > "$@"
+
+%.pars.lat-tonal.vert: %.pars.html
+	$(daba2vert) "$<" --unique --tonal --convert > "$@"
+
 
 %.dis.tonal.vert: %.dis.html %.dis.dbs
 	$(daba2vert) "$<" --tonal --unique --convert --polisemy > "$@"
@@ -72,11 +80,11 @@ test:
 	mkdir -p export/$*/data
 	encodevert -c ./$< -p export/$*/data $@ 
 
-%.old.pars.html: %.old.html
-	$(PARSER) -s bamlatinold -i "$<" -o "$@"
+%.nko.pars.html: %.nko.html
+	$(PARSER) -t -s nko -i "$<" -o "$@"
 
-%.old.pars.html: %.old.txt
-	$(PARSER) -s bamlatinold -i "$<" -o "$@"
+%.nko.pars.html: %.nko.txt
+	$(PARSER) -t -s nko -i "$<" -o "$@"
 
 %.pars.html: %.html $(dictionaries) $(grammar) $(dabafiles) 
 	$(PARSER) -i "$<" -o "$@"
@@ -124,27 +132,30 @@ makedirs:
 
 run.dabased: $(addsuffix .dbs,$(netfiles))
 
-corbama-nul.vert: $(addsuffix .nul.vert,$(brutfiles))
-	rm -f $@
-	echo "$(sort $^)" | tr ' ' '\n' | while read f ; do cat "$$f" >> $@ ; done
-
-corbama-brut.vert: $(addsuffix .non-tonal.vert,$(brutfiles))
+cormani-brut-nko-non-tonal.vert: $(addsuffix .non-tonal.vert,$(brutfiles))
 	rm -f $@
 	echo "$(sort $^)" | tr ' ' '\n' | while read f ; do cat "$$f" >> $@ ; done
 	
-corbama-net-tonal.vert: $(addsuffix .tonal.vert,$(netfiles)) 
-	cat $(sort $^) > $@
-	
-corbama-net-non-tonal.vert: $(addsuffix .non-tonal.vert,$(netfiles)) 
-	cat $(sort $^) > $@
+cormani-brut-nko-tonal.vert: $(addsuffix .tonal.vert,$(brutfiles))
+	rm -f $@
+	echo "$(sort $^)" | tr ' ' '\n' | while read f ; do cat "$$f" >> $@ ; done
 
+cormani-brut-lat-non-tonal.vert: $(addsuffix .lat.vert,$(brutfiles))
+	rm -f $@
+	echo "$(sort $^)" | tr ' ' '\n' | while read f ; do cat "$$f" >> $@ ; done
+	
+cormani-brut-lat-tonal.vert: $(addsuffix .lat-tonal.vert,$(brutfiles))
+	rm -f $@
+	echo "$(sort $^)" | tr ' ' '\n' | while read f ; do cat "$$f" >> $@ ; done
+	
+	
 compile: $(corpora-vert)
 
 reparse-net: $(addsuffix .pars.html,$(netfiles))
 
 reparse-net-vert: $(addsuffix .pars.non-tonal.vert,$(netfiles)) $(addsuffix .pars.tonal.vert,$(netfiles))
 
-freqlist.txt: corbama-net-tonal.vert
+freqlist.txt: cormani-brut-nko-tonal.vert
 	python freqlist.py $< > $@
 
 export/data/%/word.lex: config/% %.vert
@@ -155,13 +166,13 @@ export/data/%/word.lex: config/% %.vert
 	cp $< export/registry
 	cp $*.vert export/vert
 
-corbama-dist.zip:
-	git archive -o corbama-dist.zip --format=zip HEAD
+cormani-dist.zip:
+	git archive -o cormani-dist.zip --format=zip HEAD
 
-corbama-dist.tar.xz:
-	git archive --format=tar HEAD | xz -c > corbama-dist.tar.xz
+cormani-dist.tar.xz:
+	git archive --format=tar HEAD | xz -c > cormani-dist.tar.xz
 
-dist-zip: corbama-dist.zip
+dist-zip: cormani-dist.zip
 
 dist: $(compiled)
 	echo $<	
@@ -169,39 +180,39 @@ dist: $(compiled)
 dist-print:
 	echo $(foreach corpus,$(corpora),export/data/$(corpus)/word.lex)
 
-export/corbama.tar.xz: $(compiled)
-	pushd export ; tar cJvf corbama.tar.xz * ; popd
+export/cormani.tar.xz: $(compiled)
+	pushd export ; tar cJvf cormani.tar.xz * ; popd
 
 create-testing:
 	$(RSYNC) remote/*.sh $(USER)@$(HOST):
 	ssh $(USER)@$(HOST) -p $(PORT) create-hsh.sh $(TESTING) $(TESTPORT)
-	ssh $(USER)@$(HOST) -p $(PORT) hsh-run --rooter $(TESTING) -- 'sh setup-bonito.sh corbama $(corpora)' 
+	ssh $(USER)@$(HOST) -p $(PORT) hsh-run --rooter $(TESTING) -- 'sh setup-bonito.sh cormani $(corpora)' 
 
-install-testing: export/corbama.tar.xz
+install-testing: export/cormani.tar.xz
 	$(RSYNC) $< $(USER)@$(HOST):$(TESTING)/chroot/.in/
-	ssh $(USER)@$(HOST) -p $(PORT) hsh-run --rooter $(TESTING) -- 'rm -rf /var/lib/manatee/{data,registry,vert}/corbama*'
-	ssh $(USER)@$(HOST) -p $(PORT) hsh-run --rooter $(TESTING) -- 'tar --no-same-permissions --no-same-owner -xJvf corbama.tar.xz --directory /var/lib/manatee'
+	ssh $(USER)@$(HOST) -p $(PORT) hsh-run --rooter $(TESTING) -- 'rm -rf /var/lib/manatee/{data,registry,vert}/cormani*'
+	ssh $(USER)@$(HOST) -p $(PORT) hsh-run --rooter $(TESTING) -- 'tar --no-same-permissions --no-same-owner -xJvf cormani.tar.xz --directory /var/lib/manatee'
 
-install: export/corbama.tar.xz
+install: export/cormani.tar.xz
 	$(RSYNC) $< $(USER)@$(HOST):
-	ssh $(USER)@$(HOST) -p $(PORT) rm -rf /var/lib/manatee/{data,registry,vert}/corbama*
-	ssh $(USER)@$(HOST) -p $(PORT) "umask 0022 && tar --no-same-permissions --no-same-owner -xJvf corbama.tar.xz --directory /var/lib/manatee"
+	ssh $(USER)@$(HOST) -p $(PORT) rm -rf /var/lib/manatee/{data,registry,vert}/cormani*
+	ssh $(USER)@$(HOST) -p $(PORT) "umask 0022 && tar --no-same-permissions --no-same-owner -xJvf cormani.tar.xz --directory /var/lib/manatee"
 
-install-local: export/corbama.tar.xz
-	sudo rm -rf /var/lib/manatee/{data,registry,vert}/corbama*
+install-local: export/cormani.tar.xz
+	sudo rm -rf /var/lib/manatee/{data,registry,vert}/cormani*
 	sudo tar -xJvf $< --directory /var/lib/manatee --no-same-permissions --no-same-owner
 
 
 corpsize:
-	@echo "net:" `awk 'NF>1 && $$1 !~ /^</ && $$3 != "c" {print}' corbama-net-non-tonal.vert | wc -l`
-	@echo "brut:" `awk 'NF>1 && $$1 !~ /^</ && $$3 != "c" {print}' corbama-brut.vert | wc -l`
+	@echo "net:" `awk 'NF>1 && $$1 !~ /^</ && $$3 != "c" {print}' cormani-brut-nko-non-tonal.vert | wc -l`
+	@echo "brut:" `awk 'NF>1 && $$1 !~ /^</ && $$3 != "c" {print}' cormani-brut-nko-non-tonal.vert | wc -l`
 #	find -name \*.dis.html -print0 | xargs -0 -n 1 python ../daba/metaprint.py -w | awk '{c+=$$2}END{print "net:" c}'
 #	find -name \*.pars.html -print0 | xargs -0 -n 1 python ../daba/metaprint.py -w | awk '{c+=$$2}END{print "brut:" c}'
 
 clean: clean-vert clean-parse clean-pars
 
 clean-vert:
-	find -name \*.vert -not -name corbama-\*.vert -exec rm -f {} \;
+	find -name \*.vert -not -name cormani-\*.vert -exec rm -f {} \;
 	rm -f run/.vertical
 
 clean-parse: 
@@ -216,11 +227,3 @@ clean-duplicates:
 clean-pars:
 	find -name \*.pars.html -exec rm -f {} \;
 
-
-net-subparts:
-	for type in text_medium source_type ; do \
-	for suffix in non-tonal tonal ; do \
-	rm -vf corbama-net-$$suffix-$$type-*.vert ; \
-	for file in $(addsuffix .$$suffix.vert,$(netfiles)) ; do \
-	cat $$file >> "corbama-net-$$suffix-$$type-$$(sed -n 's/.*'$$type'="\([^"]\+\)".*/\L\1/p' $$file | sed 's/ /_/g' | grep . || echo "undef").vert" ; \
-	done ; done ; done
