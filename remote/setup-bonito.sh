@@ -11,7 +11,7 @@ do
 done
 # setup apache dir
 cp /etc/httpd2/conf/sites-available/bonito2.conf /etc/httpd2/conf/sites-available/"$corpname".conf
-sed -i "s/bonito2\?/$corpname/g" /etc/httpd2/conf/sites-available/"$corpname".conf
+sed -i "/Alias/s/bonito2\?/$corpname/g" /etc/httpd2/conf/sites-available/"$corpname".conf
 mkdir -p "$corpdir"
 a2ensite "$corpname"
 # setup bonito instance

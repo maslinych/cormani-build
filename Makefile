@@ -11,8 +11,8 @@ HOST=maslinsky.spb.ru
 USER=corpora
 PORT=222
 # CHROOTS
-TESTING=testing
-TESTPORT=8098
+TESTING=testing-emk
+TESTPORT=8198
 # UTILS
 MALIDABA=$(ROOT)/malidaba
 BAMADABA=$(ROOT)/bamadaba
@@ -46,7 +46,7 @@ corpora := cormani-brut-nko-non-tonal cormani-brut-nko-tonal cormani-brut-lat-no
 corpora-vert := $(addsuffix .vert, $(corpora))
 compiled := $(patsubst %,export/data/%/word.lex,$(corpora))
 
-.PRECIOUS: $(parshtmlfiles)
+.PRECIOUS: $(parshtmlfiles) $(compiled)
 
 test:
 	$(info $(brutfiles))
