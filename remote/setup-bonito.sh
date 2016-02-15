@@ -15,6 +15,7 @@ sed -i "/Alias/s/bonito2\?/$corpname/g" /etc/httpd2/conf/sites-available/"$corpn
 sed -i "/Directory/s/bonito2\?/$corpname/g" /etc/httpd2/conf/sites-available/"$corpname".conf
 mkdir -p "$corpdir"
 a2ensite "$corpname"
+a2enmod cgi
 # setup bonito instance
 setupbonito "$corpdir" /var/lib/manatee
 cgifile="$corpdir/run.cgi"
