@@ -1,4 +1,4 @@
-PATH "/var/lib/manatee/data/cormani-brut-nko-tonal"
+PATH "export/data/cormani-brut-nko-tonal"
 VERTICAL "cormani-brut-nko-tonal.vert"
 ENCODING "utf-8"
 LOCALE "emk_GN"

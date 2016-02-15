@@ -1,4 +1,4 @@
-PATH "/var/lib/manatee/data/cormani-brut-lat-non-tonal"
+PATH "export/data/cormani-brut-lat-non-tonal"
 VERTICAL "cormani-brut-lat-non-tonal.vert"
 ENCODING "utf-8"
 LOCALE "emk_GN"
@@ -16,10 +16,6 @@ ATTRIBUTE tag {
     MULTIVALUE yes
     MULTISEP "|"
 }
-ATTRIBUTE form {
-    MULTIVALUE yes
-    MULTISEP "|"
-}
 ATTRIBUTE gloss {
     MULTIVALUE yes
     MULTISEP "|"
@@ -30,6 +26,10 @@ ATTRIBUTE parts {
     MULTISEP "|"
 }
 ATTRIBUTE nko
+ATTRIBUTE tonal {
+    MULTIVALUE yes
+    MULTISEP "|"
+}
 ATTRIBUTE lc {
     LABEL "word (lowercase)"
     DYNAMIC utf8lowercase

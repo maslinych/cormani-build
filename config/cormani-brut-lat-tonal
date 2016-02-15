@@ -1,4 +1,4 @@
-PATH "/var/lib/manatee/data/cormani-brut-lat-tonal"
+PATH "export/data/cormani-brut-lat-tonal"
 VERTICAL "cormani-brut-lat-tonal.vert"
 ENCODING "utf-8"
 LOCALE "emk_GN"

@@ -1,4 +1,4 @@
-PATH "/var/lib/manatee/data/cormani-brut-nko-non-tonal"
+PATH "export/data/cormani-brut-nko-non-tonal"
 VERTICAL "cormani-brut-nko-non-tonal.vert"
 ENCODING "utf-8"
 LOCALE "emk_GN"
@@ -23,6 +23,10 @@ ATTRIBUTE gloss {
     LOCALE "fr_FR"
 }
 ATTRIBUTE parts {
+    MULTIVALUE yes
+    MULTISEP "|"
+}
+ATTRIBUTE tonal {
     MULTIVALUE yes
     MULTISEP "|"
 }
