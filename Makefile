@@ -11,8 +11,8 @@ HOST=maslinsky.spb.ru
 USER=corpora
 PORT=222
 # CHROOTS
-TESTING=testing-emk
-TESTPORT=8198
+TESTING=testing
+TESTPORT=8098
 # UTILS
 MALIDABA=$(ROOT)/malidaba
 BAMADABA=$(ROOT)/bamadaba
@@ -42,7 +42,7 @@ parshtmlfiles := $(addsuffix .pars.html,$(basename $(parsenkofiles)))
 netfiles := $(patsubst %.html,%,$(dishtmlfiles))
 brutfiles := $(netfiles) $(patsubst %.html,%,$(parshtmlfiles))
 
-corpora := cormani-brut-nko-non-tonal cormani-brut-nko-tonal cormani-brut-lat-non-tonal cormani-brut-lat-tonal
+corpora := cormani-brut-nko-non-tonal cormani-brut-lat-non-tonal 
 corpora-vert := $(addsuffix .vert, $(corpora))
 compiled := $(patsubst %,export/data/%/word.lex,$(corpora))
 
@@ -55,7 +55,7 @@ print-%:
 	$(info $*=$($*))
 
 %.pars.tonal.vert: %.pars.html
-	$(daba2vert) "$<" --tonal > "$@"
+	$(daba2vert) "$<" --tonal --unique > "$@"
 	
 %.pars.non-tonal.vert: %.pars.html
 	$(daba2vert) "$<" --unique  > "$@"
@@ -80,10 +80,10 @@ print-%:
 	mkdir -p export/$*/data
 	encodevert -c ./$< -p export/$*/data $@ 
 
-%.nko.pars.html: %.nko.html
+%.nko.pars.html: %.nko.html $(dictionaries) $(grammar) $(dabafiles) 
 	$(PARSER) -t -s nko -i "$<" -o "$@"
 
-%.nko.pars.html: %.nko.txt
+%.nko.pars.html: %.nko.txt $(dictionaries) $(grammar) $(dabafiles) 
 	$(PARSER) -t -s nko -i "$<" -o "$@"
 
 %.pars.html: %.html $(dictionaries) $(grammar) $(dabafiles) 
@@ -164,6 +164,7 @@ export/data/%/word.lex: config/% %.vert
 	mkdir -p export/vert
 	encodevert -c ./$< -p $(@D) $*.vert
 	cp $< export/registry
+	sed -i '/^PATH/s,export,/var/lib/manatee,' export/registry/$*
 	cp $*.vert export/vert
 
 cormani-dist.zip:
@@ -185,7 +186,7 @@ export/cormani.tar.xz: $(compiled)
 
 create-testing:
 	$(RSYNC) remote/*.sh $(USER)@$(HOST):
-	ssh $(USER)@$(HOST) -p $(PORT) create-hsh.sh $(TESTING) $(TESTPORT)
+	ssh $(USER)@$(HOST) -p $(PORT) sh create-hsh.sh $(TESTING) $(TESTPORT)
 	ssh $(USER)@$(HOST) -p $(PORT) hsh-run --rooter $(TESTING) -- 'sh setup-bonito.sh cormani $(corpora)' 
 
 install-testing: export/cormani.tar.xz

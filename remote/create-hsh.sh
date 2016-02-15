@@ -3,7 +3,7 @@ shift
 port="$1"
 shift
 
-hsh --initroot "$hasher_chroot"
+hsh --initroot --pkg-build-list="basesystem" --no-cache "$hasher_chroot"
 hsh-install "$hasher_chroot" manatee-open bonito2-open apache2-base
 cp setup-corpus-environment.sh "$hasher_chroot/chroot/.in/"
 cp setup-bonito.sh "$hasher_chroot/chroot/.in/"
