@@ -37,16 +37,23 @@ dishtmlfiles := $(patsubst $(SRC)/%,%,$(wildcard $(SRC)/*.dis.html $(SRC)/*/*.di
 srctxtfiles := $(filter-out $(htmlfiles:.html=.txt) $(dishtmlfiles:.dis.html=.txt) $(dishtmlfiles:.dis.html=.nko.txt) $(auxtxtfiles) %_fra.txt,$(txtfiles))
 srchtmlfiles := $(filter-out $(dishtmlfiles:.dis.html=.html) $(dishtmlfiles:.dis.html=.nko.html),$(htmlfiles))
 parsenkofiles := $(filter %.nko.html,$(srchtmlfiles)) $(filter %.nko.txt,$(srctxtfiles))
+parseoldfiles := $(filter %.old.html,$(srchtmlfiles)) $(filter %.old.txt,$(srctxtfiles:.old.lst.txt=.old.txt))
+parselatfiles := $(filter %.lat.html,$(srchtmlfiles)) $(filter-out %.old.lat.txt,$(filter %.lat.txt,$(srctxtfiles:.lst.txt=.lat.txt)))
+parshtmllatfiles := $(addsuffix .pars.html,$(basename $(parselatfiles) $(parseoldfiles)))
+
 dabasedfiles := $(sort $(wildcard releases/*/*.dabased))
 parshtmlfiles := $(addsuffix .pars.html,$(basename $(parsenkofiles)))
 netfiles := $(patsubst %.html,%,$(dishtmlfiles))
 brutfiles := $(netfiles) $(patsubst %.html,%,$(parshtmlfiles))
+latfiles := $(patsubst %.html,%,$(parshtmllatfiles))
 
-corpora := cormani-brut-nko-non-tonal cormani-brut-lat-non-tonal 
+
+corpora := cormani-brut-nko cormani-brut-lat cormani-brut-nko-ltr
 corpora-vert := $(addsuffix .vert, $(corpora))
 compiled := $(patsubst %,export/data/%/word.lex,$(corpora))
 
-.PRECIOUS: $(parshtmlfiles) $(compiled)
+.PRECIOUS: $(parshtmlfiles) $(parshtmllatfiles) $(compiled)
+.PHONY: test
 
 test:
 	$(info $(brutfiles))
@@ -54,28 +61,20 @@ test:
 print-%:
 	$(info $*=$($*))
 
-%.pars.tonal.vert: %.pars.html
-	$(daba2vert) "$<" --tonal --unique > "$@"
-	
-%.pars.non-tonal.vert: %.pars.html
-	$(daba2vert) "$<" --unique  > "$@"
+compile: $(corpora-vert)
 
-%.pars.lat.vert: %.pars.html
+%.nko.pars.vert: %.nko.pars.html
+	$(daba2vert) "$<" --unique --convert --keepsource > "$@"
+
+%.lat.pars.vert: %.lat.pars.html
 	$(daba2vert) "$<" --unique --convert > "$@"
 
-%.pars.lat-tonal.vert: %.pars.html
-	$(daba2vert) "$<" --unique --tonal --convert > "$@"
+%.old.pars.vert: %.old.pars.html
+	$(daba2vert) "$<" --unique --convert > "$@"
 
-
-%.dis.tonal.vert: %.dis.html %.dis.dbs
-	$(daba2vert) "$<" --tonal --unique --convert --polisemy > "$@"
+%.dis.vert: %.dis.html %.dis.dbs
+	$(daba2vert) "$<" --unique --convert --keepsource > "$@"
 	
-%.dis.non-tonal.vert: %.dis.html %.dis.dbs
-	$(daba2vert) "$<" --unique --convert --polisemy --debugfields > "$@"
-
-%.dis.nul.vert: %.dis.html %.dis.dbs
-	$(daba2vert) "$<" --unique --null --convert > "$@"
-
 %.vert: config/%
 	mkdir -p export/$*/data
 	encodevert -c ./$< -p export/$*/data $@ 
@@ -86,10 +85,19 @@ print-%:
 %.nko.pars.html: %.nko.txt $(dictionaries) $(grammar) $(dabafiles) 
 	$(PARSER) -t -s nko -i "$<" -o "$@"
 
-%.pars.html: %.html $(dictionaries) $(grammar) $(dabafiles) 
+%.old.txt: %.old.lst.txt
+	perl -p -e 's,<s>(.*?)</s>,,g;s,<t>(.*?)</t>,\1 ,g' "$<" > "$@"
+
+%.lat.txt: %.lst.txt
+	perl -p -e 's,<s>(.*?)</s>,,g;s,<t>(.*?)</t>,\1 ,g' "$<" > "$@"
+
+%.lat.pars.html: %.lat.html $(dictionaries) $(grammar) $(dabafiles) 
 	$(PARSER) -i "$<" -o "$@"
 
-%.pars.html: %.txt $(dictionaries) $(grammar) $(dabafiles) 
+%.old.pars.html: %.old.txt
+	$(PARSER) -s emklatinold -i "$<" -o "$@"
+
+%.lat.pars.html: %.lat.txt $(dictionaries) $(grammar) $(dabafiles) 
 	$(PARSER) -i "$<" -o "$@"
 
 %.dis.pars.html: %.dis.html $(dictionaries) $(grammar) $(dabafiles) 
@@ -106,7 +114,7 @@ print-%:
 	export lastcommit=$$($(gitsrc) log -n1 --pretty="%H" -- "$(<:$(SRC)/%=%)") ; \
 	for f in $(dabasedfiles); do \
 		export dabasedsha=$$(sha1sum $$f | cut -f1 -d" ") ; \
-		export applyed=$$(cat $@ | while read script scriptsha commitsha ; do \
+		export applied=$$(cat $@ | while read script scriptsha commitsha ; do \
 			if [ $$dabasedsha = $$scriptsha ] ; then \
 				if $$($(gitsrc) merge-base --is-ancestor $$commitsha $$lastcommit) ; then \
 					echo -n "yes" ; break ;\
@@ -115,8 +123,8 @@ print-%:
 				fi ;\
 			fi ;\
 			done );\
-		echo "Already applyed:" $< $$f ;\
-		test -z "$$applyed" && $(dabased) -s $$f $< && echo $$f $$dabasedsha $$lastcommit >> $@ ;\
+		echo "Already applied:" $< $$f ;\
+		test -z "$$applied" && $(dabased) -s $$f $< && echo $$f $$dabasedsha $$lastcommit >> $@ ;\
 		done ; exit 0 
 
 all: compile
@@ -132,24 +140,16 @@ makedirs:
 
 run.dabased: $(addsuffix .dbs,$(netfiles))
 
-cormani-brut-nko-non-tonal.vert: $(addsuffix .non-tonal.vert,$(brutfiles))
+cormani-brut-nko.vert: $(addsuffix .vert,$(brutfiles))
 	rm -f $@
 	echo "$(sort $^)" | tr ' ' '\n' | while read f ; do cat "$$f" >> $@ ; done
 	
-cormani-brut-nko-tonal.vert: $(addsuffix .tonal.vert,$(brutfiles))
-	rm -f $@
-	echo "$(sort $^)" | tr ' ' '\n' | while read f ; do cat "$$f" >> $@ ; done
-
-cormani-brut-lat-non-tonal.vert: $(addsuffix .lat.vert,$(brutfiles))
+cormani-brut-lat.vert: $(addsuffix .vert,$(latfiles))
 	rm -f $@
 	echo "$(sort $^)" | tr ' ' '\n' | while read f ; do cat "$$f" >> $@ ; done
 	
-cormani-brut-lat-tonal.vert: $(addsuffix .lat-tonal.vert,$(brutfiles))
-	rm -f $@
-	echo "$(sort $^)" | tr ' ' '\n' | while read f ; do cat "$$f" >> $@ ; done
-	
-	
-compile: $(corpora-vert)
+cormani-brut-nko-ltr.vert:
+	touch $@
 
 reparse-net: $(addsuffix .pars.html,$(netfiles))
 
@@ -205,8 +205,8 @@ install-local: export/cormani.tar.xz
 
 
 corpsize:
-	@echo "net:" `awk 'NF>1 && $$1 !~ /^</ && $$3 != "c" {print}' cormani-brut-nko-non-tonal.vert | wc -l`
-	@echo "brut:" `awk 'NF>1 && $$1 !~ /^</ && $$3 != "c" {print}' cormani-brut-nko-non-tonal.vert | wc -l`
+	@echo "net:" `awk 'NF>1 && $$1 !~ /^</ && $$3 != "c" {print}' cormani-brut-nko.vert | wc -l`
+	@echo "brut:" `awk 'NF>1 && $$1 !~ /^</ && $$3 != "c" {print}' cormani-brut-nko.vert | wc -l`
 #	find -name \*.dis.html -print0 | xargs -0 -n 1 python ../daba/metaprint.py -w | awk '{c+=$$2}END{print "net:" c}'
 #	find -name \*.pars.html -print0 | xargs -0 -n 1 python ../daba/metaprint.py -w | awk '{c+=$$2}END{print "brut:" c}'
 
