@@ -27,7 +27,10 @@ ATTRIBUTE parts {
     MULTISEP "|"
 }
 ATTRIBUTE latin 
-ATTRIBUTE tonal 
+ATTRIBUTE tonal {
+    MULTIVALUE yes
+    MULTISEP "|"
+}
 ATTRIBUTE lemma_lc {
     LABEL "lemma (lowercase)"
     DYNAMIC utf8lowercase

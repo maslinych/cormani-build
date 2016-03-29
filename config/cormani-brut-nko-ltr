@@ -1,8 +1,8 @@
-PATH "export/data/cormani-brut-nko-non-tonal"
-VERTICAL "cormani-brut-nko-non-tonal.vert"
+PATH "export/data/cormani-brut-nko"
+VERTICAL "cormani-brut-nko.vert"
 ENCODING "utf-8"
 LOCALE "emk_GN"
-RIGHTTOLEFT yes
+RIGHTTOLEFT 0
 INFO "Maninka Automatically Parsed corpus (non-disambiguated)\nRelease 0.1, 2015.05.12\nmore info at http://www......"
 INFOHREF "http://mandelang.org/cormani"
 WPOSLIST ",noun,n,proper noun,n.prop,adjective,adj,numeral,num,verb,v,participle,ptcp,qualitative verb,vq,adverbial,adv.*,conjunction,conj,copula,cop,determinative,dtm,interjection,intj,onomatopoeia,onomat,personal pronoun,pers,predicative marker,pm,postposition,pp,preposition,prep,pronoun,prn,particle,prt"
@@ -26,19 +26,10 @@ ATTRIBUTE parts {
     MULTIVALUE yes
     MULTISEP "|"
 }
+ATTRIBUTE latin 
 ATTRIBUTE tonal {
     MULTIVALUE yes
     MULTISEP "|"
-}
-ATTRIBUTE lc {
-    LABEL "word (lowercase)"
-    DYNAMIC utf8lowercase
-    DYNLIB internal
-    ARG1 "C"
-    FUNTYPE s
-    FROMATTR word
-    TYPE index
-    TRANSQUERY yes
 }
 ATTRIBUTE lemma_lc {
     LABEL "lemma (lowercase)"
@@ -52,9 +43,9 @@ ATTRIBUTE lemma_lc {
 }
 
 
+
 STRUCTURE doc {
     ATTRIBUTE id
-    ATTRIBUTE wordcount
 	ATTRIBUTE text_genre {
         MULTIVALUE yes
         MULTISEP ";"
@@ -73,9 +64,10 @@ STRUCTURE doc {
 }
 
 
+
 STRUCTURE p
 STRUCTURE s 
-SHORTREF "=doc.id,#"
-MAXCONTEXT 100
-MAXDETAIL 200
+SHORTREF "=doc.id"
+MAXCONTEXT 30
+MAXDETAIL 30
 
