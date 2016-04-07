@@ -10,7 +10,9 @@ vpath %.dabased $(SRC)
 HOST=corpora
 # CHROOTS
 TESTING=testing
+PRODUCTION=production
 TESTPORT=8098
+PRODPORT=8099
 # UTILS
 MALIDABA=$(ROOT)/malidaba
 BAMADABA=$(ROOT)/bamadaba
@@ -46,7 +48,7 @@ brutfiles := $(netfiles) $(patsubst %.html,%,$(parshtmlfiles))
 latfiles := $(patsubst %.html,%,$(parshtmllatfiles))
 
 
-corpora := cormani-brut-nko cormani-brut-lat cormani-brut-nko-ltr
+corpora := cormani-brut-nko cormani-brut-lat
 corpora-vert := $(addsuffix .vert, $(corpora))
 compiled := $(patsubst %,export/data/%/word.lex,$(corpora))
 
@@ -146,7 +148,7 @@ cormani-brut-lat.vert: $(addsuffix .vert,$(latfiles))
 	rm -f $@
 	echo "$(sort $^)" | tr ' ' '\n' | while read f ; do cat "$$f" >> $@.nonko ; done
 	awk -F"\t" 'NF==7 {print}' $@.nonko | cut -f 1 | perl scripts/lat2nko.pl > $@.nko
-	awk -F"\t" 'NF==7 { getline $$8 < "$@.nko"; print ; next} {print}' $@.nonko > $@
+	awk -F"\t" 'BEGIN {OFS="\t"} NF==7 { getline $$8 < "$@.nko"; print ; next} {print}' $@.nonko > $@
 	
 cormani-brut-nko-ltr.vert:
 	touch $@
@@ -193,6 +195,12 @@ install-testing: export/cormani.tar.xz
 	$(RSYNC) $< $(HOST):$(TESTING)/chroot/.in/
 	ssh $(HOST) hsh-run --rooter $(TESTING) -- 'rm -rf /var/lib/manatee/{data,registry,vert}/cormani*'
 	ssh $(HOST) hsh-run --rooter $(TESTING) -- 'tar --no-same-permissions --no-same-owner -xJvf cormani.tar.xz --directory /var/lib/manatee'
+
+production:
+	$(RSYNC) remote/testing2production.sh $(HOST):$(TESTING)/chroot/.in/
+	ssh $(HOST) hsh-run --rooter $(TESTING) -- 'sh testing2production.sh $(TESTPORT) $(PRODPORT)'
+	ssh $(HOST) mv $(TESTING) $(PRODUCTION)
+
 
 install: export/cormani.tar.xz
 	$(RSYNC) $< $(HOST):
