@@ -30,6 +30,7 @@ ATTRIBUTE tonal {
     MULTIVALUE yes
     MULTISEP "|"
 }
+ATTRIBUTE nko
 ATTRIBUTE lc {
     LABEL "word (lowercase)"
     DYNAMIC utf8lowercase

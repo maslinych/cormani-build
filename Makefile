@@ -146,7 +146,9 @@ cormani-brut-nko.vert: $(addsuffix .vert,$(brutfiles))
 	
 cormani-brut-lat.vert: $(addsuffix .vert,$(latfiles))
 	rm -f $@
-	echo "$(sort $^)" | tr ' ' '\n' | while read f ; do cat "$$f" >> $@ ; done
+	echo "$(sort $^)" | tr ' ' '\n' | while read f ; do cat "$$f" >> $@.nonko ; done
+	awk -F"\t" 'NF==7 {print}' $@.nonko | cut -f 1 | perl scripts/lat2nko.pl > $@.nko
+	awk -F"\t" 'NF==7 { getline $$8 < "$@.nko"; print ; next} {print}' $@.nonko > $@
 	
 cormani-brut-nko-ltr.vert:
 	touch $@
