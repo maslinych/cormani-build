@@ -7,9 +7,7 @@ vpath %.html $(SRC)
 vpath %.dabased $(SRC)
 #
 # SETUP CREDENTIALS
-HOST=maslinsky.spb.ru
-USER=corpora
-PORT=222
+HOST=corpora
 # CHROOTS
 TESTING=testing
 TESTPORT=8098
@@ -20,7 +18,7 @@ PYTHON=PYTHONPATH=$(DABA) python
 PARSER=$(PYTHON) $(DABA)/mparser.py 
 daba2vert=$(PYTHON) $(DABA)/ad-hoc/daba2vert.py -v $(MALIDABA)/malidaba.txt
 dabased=$(PYTHON) $(DABA)/dabased.py -v
-RSYNC=rsync -avP --stats -e "ssh -p $(PORT)"
+RSYNC=rsync -avP --stats -e ssh
 gitsrc=git --git-dir=$(SRC)/.git/
 # 
 # EXTERNAL RESOURCES
@@ -187,19 +185,19 @@ export/cormani.tar.xz: $(compiled)
 	pushd export ; tar cJvf cormani.tar.xz * ; popd
 
 create-testing:
-	$(RSYNC) remote/*.sh $(USER)@$(HOST):
-	ssh $(USER)@$(HOST) -p $(PORT) sh create-hsh.sh $(TESTING) $(TESTPORT)
-	ssh $(USER)@$(HOST) -p $(PORT) hsh-run --rooter $(TESTING) -- 'sh setup-bonito.sh cormani $(corpora)' 
+	$(RSYNC) remote/*.sh $(HOST):
+	ssh $(HOST)  sh create-hsh.sh $(TESTING) $(TESTPORT)
+	ssh $(HOST) hsh-run --rooter $(TESTING) -- 'sh setup-bonito.sh cormani $(corpora)' 
 
 install-testing: export/cormani.tar.xz
-	$(RSYNC) $< $(USER)@$(HOST):$(TESTING)/chroot/.in/
-	ssh $(USER)@$(HOST) -p $(PORT) hsh-run --rooter $(TESTING) -- 'rm -rf /var/lib/manatee/{data,registry,vert}/cormani*'
-	ssh $(USER)@$(HOST) -p $(PORT) hsh-run --rooter $(TESTING) -- 'tar --no-same-permissions --no-same-owner -xJvf cormani.tar.xz --directory /var/lib/manatee'
+	$(RSYNC) $< $(HOST):$(TESTING)/chroot/.in/
+	ssh $(HOST) hsh-run --rooter $(TESTING) -- 'rm -rf /var/lib/manatee/{data,registry,vert}/cormani*'
+	ssh $(HOST) hsh-run --rooter $(TESTING) -- 'tar --no-same-permissions --no-same-owner -xJvf cormani.tar.xz --directory /var/lib/manatee'
 
 install: export/cormani.tar.xz
-	$(RSYNC) $< $(USER)@$(HOST):
-	ssh $(USER)@$(HOST) -p $(PORT) rm -rf /var/lib/manatee/{data,registry,vert}/cormani*
-	ssh $(USER)@$(HOST) -p $(PORT) "umask 0022 && tar --no-same-permissions --no-same-owner -xJvf cormani.tar.xz --directory /var/lib/manatee"
+	$(RSYNC) $< $(HOST):
+	ssh $(HOST) rm -rf /var/lib/manatee/{data,registry,vert}/cormani*
+	ssh $(HOST) "umask 0022 && tar --no-same-permissions --no-same-owner -xJvf cormani.tar.xz --directory /var/lib/manatee"
 
 install-local: export/cormani.tar.xz
 	sudo rm -rf /var/lib/manatee/{data,registry,vert}/cormani*
