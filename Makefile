@@ -212,9 +212,10 @@ install-local: export/cormani.tar.xz
 	sudo tar -xJvf $< --directory /var/lib/manatee --no-same-permissions --no-same-owner
 
 
-corpsize:
-	@echo "net:" `awk 'NF>1 && $$1 !~ /^</ && $$3 != "c" {print}' cormani-brut-nko.vert | wc -l`
-	@echo "brut:" `awk 'NF>1 && $$1 !~ /^</ && $$3 != "c" {print}' cormani-brut-nko.vert | wc -l`
+corpsize: $(corpora-vert)
+	for corp in $(corpora-vert); do \
+		echo "$$corp" tokens: `awk 'NF>1 && $$1 !~ /^</ && $$3 != "c" {print}' $$corp | wc -l` ; \
+		done
 #	find -name \*.dis.html -print0 | xargs -0 -n 1 python ../daba/metaprint.py -w | awk '{c+=$$2}END{print "net:" c}'
 #	find -name \*.pars.html -print0 | xargs -0 -n 1 python ../daba/metaprint.py -w | awk '{c+=$$2}END{print "brut:" c}'
 
