@@ -35,6 +35,7 @@ txtfiles := $(patsubst $(SRC)/%,%,$(wildcard $(SRC)/*.txt $(SRC)/*/*.txt $(SRC)/
 htmlfiles := $(filter-out %.pars.html %.dis.html,$(patsubst $(SRC)/%,%,$(wildcard $(SRC)/*.html $(SRC)/*/*.html $(SRC)/*/*/*.html)))
 dishtmlfiles := $(patsubst $(SRC)/%,%,$(wildcard $(SRC)/*.dis.html $(SRC)/*/*.dis.html $(SRC)/*/*/*.dis.html))
 srctxtfiles := $(filter-out $(htmlfiles:.html=.txt) $(dishtmlfiles:.dis.html=.txt) $(dishtmlfiles:.dis.html=.nko.txt) $(auxtxtfiles) %_fra.txt,$(txtfiles))
+repertoires := $($(SRC)/%,%,$(wildcard $(SRC)/repertoires/*.csv))
 srchtmlfiles := $(filter-out $(dishtmlfiles:.dis.html=.html) $(dishtmlfiles:.dis.html=.nko.html),$(htmlfiles))
 parsenkofiles := $(filter %.nko.html,$(srchtmlfiles)) $(filter %.nko.txt,$(srctxtfiles))
 parseoldfiles := $(filter %.old.html,$(srchtmlfiles)) $(filter %.old.txt,$(srctxtfiles:.old.lst.txt=.old.txt))
@@ -127,6 +128,9 @@ compile: $(corpora-vert)
 		test -z "$$applied" && $(dabased) -s $$f $< && echo $$f $$dabasedsha $$lastcommit >> $@ ;\
 		done ; exit 0 
 
+%.csv: %.xlsx
+	ssconvert $< $@
+
 all: compile
 
 parse: $(parshtmlfiles)
@@ -189,6 +193,8 @@ export/cormani.tar.xz: $(compiled)
 create-testing:
 	$(RSYNC) remote/*.sh $(HOST):
 	ssh $(HOST)  sh create-hsh.sh $(TESTING) $(TESTPORT)
+
+setup-bonito:
 	ssh $(HOST) hsh-run --rooter $(TESTING) -- 'sh setup-bonito.sh cormani $(corpora)' 
 
 install-testing: export/cormani.tar.xz
@@ -199,6 +205,7 @@ install-testing: export/cormani.tar.xz
 production:
 	$(RSYNC) remote/testing2production.sh $(HOST):$(TESTING)/chroot/.in/
 	ssh $(HOST) hsh-run --rooter $(TESTING) -- 'sh testing2production.sh $(TESTPORT) $(PRODPORT)'
+	ssh $(HOST) mv $(PRODUCTION) $(ROLLBACK)
 	ssh $(HOST) mv $(TESTING) $(PRODUCTION)
 
 
@@ -218,6 +225,10 @@ corpsize: $(corpora-vert)
 		done
 #	find -name \*.dis.html -print0 | xargs -0 -n 1 python ../daba/metaprint.py -w | awk '{c+=$$2}END{print "net:" c}'
 #	find -name \*.pars.html -print0 | xargs -0 -n 1 python ../daba/metaprint.py -w | awk '{c+=$$2}END{print "brut:" c}'
+
+repertoire:
+	for i in *.xlsx ; do ssconvert $i ${i%%.xlsx}.csv ; done
+
 
 clean: clean-vert clean-parse clean-pars
 
