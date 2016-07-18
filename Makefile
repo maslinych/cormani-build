@@ -56,9 +56,6 @@ compiled := $(patsubst %,export/data/%/word.lex,$(corpora))
 .PRECIOUS: $(parshtmlfiles) $(parshtmllatfiles) $(compiled)
 .PHONY: test
 
-test:
-	$(info $(brutfiles))
-
 print-%:
 	$(info $*=$($*))
 
@@ -189,6 +186,9 @@ dist-print:
 
 export/cormani.tar.xz: $(compiled)
 	pushd export ; tar cJvf cormani.tar.xz * ; popd
+
+test:
+	$(MAKE) -C sharness
 
 create-testing:
 	$(RSYNC) remote/*.sh $(HOST):
