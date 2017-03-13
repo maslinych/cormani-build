@@ -164,11 +164,9 @@ freqlist.txt: cormani-brut-nko-tonal.vert
 export/data/%/word.lex: config/% %.vert
 	mkdir -p $(@D)
 	mkdir -p export/registry
-	mkdir -p export/vert
 	encodevert -c ./$< -p $(@D) $*.vert
 	cp $< export/registry
 	sed -i '/^PATH/s,export,/var/lib/manatee,' export/registry/$*
-	cp $*.vert export/vert
 
 cormani-dist.zip:
 	git archive -o cormani-dist.zip --format=zip HEAD
