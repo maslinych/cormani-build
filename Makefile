@@ -78,10 +78,10 @@ compile: $(corpora-vert)
 	encodevert -c ./$< -p export/$*/data $@ 
 
 %.nko.pars.html: %.nko.html $(dictionaries) $(grammar) $(dabafiles) 
-	$(PARSER) -t -s nko -i "$<" -o "$@"
+	$(PARSER) -s nko -i "$<" -o "$@"
 
 %.nko.pars.html: %.nko.txt $(dictionaries) $(grammar) $(dabafiles) 
-	$(PARSER) -t -s nko -i "$<" -o "$@"
+	$(PARSER) -s nko -i "$<" -o "$@"
 
 %.old.txt: %.old.lst.txt
 	perl -p -e 's,<s>(.*?)</s>,,g;s,<t>(.*?)</t>,\1 ,g' "$<" > "$@"
