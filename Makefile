@@ -1,6 +1,6 @@
 # SETUP PATHS
 ROOT=..
-DABA=$(ROOT)/daba/
+DABA=$(ROOT)/daba/daba/
 SRC=$(ROOT)/cormani
 vpath %.txt $(SRC)
 vpath %.html $(SRC)
@@ -17,7 +17,7 @@ PRODPORT=8099
 MALIDABA=$(ROOT)/malidaba
 BAMADABA=$(ROOT)/bamadaba
 PYTHON=PYTHONPATH=$(DABA) python
-PARSER=$(PYTHON) $(DABA)/mparser.py 
+PARSER=mparser
 daba2vert=$(PYTHON) $(DABA)/ad-hoc/daba2vert.py -v $(MALIDABA)/malidaba.txt
 dabased=$(PYTHON) $(DABA)/dabased.py -v
 RSYNC=rsync -avP --stats -e ssh
@@ -29,13 +29,14 @@ dictionaries := $(addprefix $(MALIDABA)/,malidaba.txt diyalu.txt toolu.txt) $(BA
 dabafiles := $(addrefix $(DABA),grammar.py formats.py mparser.py newmorph.py)
 # 
 # SOURCE FILELISTS
+gitfiles := $(shell $(gitsrc) ls-files)
 auxtxtfiles := freqlist.txt
-nkohtmlfiles := $(patsubst $(SRC)/%,%,$(wildcard $(SRC)/*.nko.html $(SRC)/*/*.nko.html $(SRC)/*/*/*.nko.html))
-txtfiles := $(patsubst $(SRC)/%,%,$(wildcard $(SRC)/*.txt $(SRC)/*/*.txt $(SRC)/*/*/*.txt))
-htmlfiles := $(filter-out %.pars.html %.dis.html,$(patsubst $(SRC)/%,%,$(wildcard $(SRC)/*.html $(SRC)/*/*.html $(SRC)/*/*/*.html)))
-dishtmlfiles := $(patsubst $(SRC)/%,%,$(wildcard $(SRC)/*.dis.html $(SRC)/*/*.dis.html $(SRC)/*/*/*.dis.html))
-srctxtfiles := $(filter-out $(htmlfiles:.html=.txt) $(dishtmlfiles:.dis.html=.txt) $(dishtmlfiles:.dis.html=.nko.txt) $(auxtxtfiles) %_fra.txt,$(txtfiles))
-repertoires := $($(SRC)/%,%,$(wildcard $(SRC)/repertoires/*.csv))
+nkohtmlfiles := $(filter %.nko.html, $(gitfiles))
+txtfiles := $(filter-out $(auxtxtfiles), $(filter %.txt, $(gitfiles)))
+htmlfiles := $(filter-out %.pars.html %.dis.html,$(filter %.html,$(gitfiles)))
+dishtmlfiles := $(filter %.dis.html,$(gitfiles))
+srctxtfiles := $(filter-out $(htmlfiles:.html=.txt) $(dishtmlfiles:.dis.html=.txt) $(dishtmlfiles:.dis.html=.nko.txt) %_fra.txt, $(txtfiles))
+repertoires := $(filter repertoires/%.csv, $(gitfiles))
 srchtmlfiles := $(filter-out $(dishtmlfiles:.dis.html=.html) $(dishtmlfiles:.dis.html=.nko.html),$(htmlfiles))
 parsenkofiles := $(filter %.nko.html,$(srchtmlfiles)) $(filter %.nko.txt,$(srctxtfiles))
 parseoldfiles := $(filter %.old.html,$(srchtmlfiles)) $(filter %.old.txt,$(srctxtfiles:.old.lst.txt=.old.txt))
@@ -49,9 +50,16 @@ brutfiles := $(netfiles) $(patsubst %.html,%,$(parshtmlfiles))
 latfiles := $(patsubst %.html,%,$(parshtmllatfiles))
 
 
+corpbasename := cormani
+corpsite := cormani
 corpora := cormani-brut-nko cormani-brut-lat
 corpora-vert := $(addsuffix .vert, $(corpora))
 compiled := $(patsubst %,export/data/%/word.lex,$(corpora))
+## Remote corpus installation data
+corpsite-cormani := cormani
+corpora-cormani := cormani-brut-nko cormani-brut-lat
+
+include remote.mk
 
 .PRECIOUS: $(parshtmlfiles) $(parshtmllatfiles) $(compiled)
 .PHONY: test
@@ -72,7 +80,7 @@ compile: $(corpora-vert)
 
 %.dis.vert: %.dis.html %.dis.dbs
 	$(daba2vert) "$<" --unique --convert --keepsource > "$@"
-	
+
 %.vert: config/%
 	mkdir -p export/$*/data
 	encodevert -c ./$< -p export/$*/data $@ 
@@ -144,13 +152,13 @@ run.dabased: $(addsuffix .dbs,$(netfiles))
 cormani-brut-nko.vert: $(addsuffix .vert,$(brutfiles))
 	rm -f $@
 	echo "$(sort $^)" | tr ' ' '\n' | while read f ; do cat "$$f" >> $@ ; done
-	
+
 cormani-brut-lat.vert: $(addsuffix .vert,$(latfiles))
 	rm -f $@ $@.nonko $@.nko
 	echo "$(sort $^)" | tr ' ' '\n' | while read f ; do cat "$$f" >> $@.nonko ; done
 	awk -F"\t" 'NF==7 {print}' $@.nonko | cut -f 1 | perl scripts/lat2nko.pl > $@.nko
 	awk -F"\t" 'BEGIN {OFS="\t"} NF==7 { getline $$8 < "$@.nko"; print ; next} {print}' $@.nonko > $@
-	
+
 cormani-brut-nko-ltr.vert:
 	touch $@
 
@@ -162,6 +170,8 @@ freqlist.txt: cormani-brut-nko-tonal.vert
 	python freqlist.py $< > $@
 
 export/data/%/word.lex: config/% %.vert
+	rm -rf export/data/$*
+	rm -f export/registry/$*
 	mkdir -p $(@D)
 	mkdir -p export/registry
 	encodevert -c ./$< -p $(@D) $*.vert
@@ -183,34 +193,12 @@ dist-print:
 	echo $(foreach corpus,$(corpora),export/data/$(corpus)/word.lex)
 
 export/cormani.tar.xz: $(compiled)
-	pushd export ; tar cJvf cormani.tar.xz * ; popd
+	pushd export ; tar cJvf cormani.tar.xz --mode='a+r' * ; popd
 
 test:
 	$(MAKE) -C sharness
 
-create-testing:
-	$(RSYNC) remote/*.sh $(HOST):
-	ssh $(HOST)  sh create-hsh.sh $(TESTING) $(TESTPORT)
-
-setup-bonito:
-	ssh $(HOST) hsh-run --rooter $(TESTING) -- 'sh setup-bonito.sh cormani $(corpora)' 
-
-install-testing: export/cormani.tar.xz
-	$(RSYNC) $< $(HOST):$(TESTING)/chroot/.in/
-	ssh $(HOST) hsh-run --rooter $(TESTING) -- 'rm -rf /var/lib/manatee/{data,registry,vert}/cormani*'
-	ssh $(HOST) hsh-run --rooter $(TESTING) -- 'tar --no-same-permissions --no-same-owner -xJvf cormani.tar.xz --directory /var/lib/manatee'
-
-production:
-	$(RSYNC) remote/testing2production.sh $(HOST):$(TESTING)/chroot/.in/
-	ssh $(HOST) hsh-run --rooter $(TESTING) -- 'sh testing2production.sh $(TESTPORT) $(PRODPORT)'
-	ssh $(HOST) mv $(PRODUCTION) $(ROLLBACK)
-	ssh $(HOST) mv $(TESTING) $(PRODUCTION)
-
-
-install: export/cormani.tar.xz
-	$(RSYNC) $< $(HOST):
-	ssh $(HOST) rm -rf /var/lib/manatee/{data,registry,vert}/cormani*
-	ssh $(HOST) "umask 0022 && tar --no-same-permissions --no-same-owner -xJvf cormani.tar.xz --directory /var/lib/manatee"
+install-testing: install-corpus-cormani
 
 install-local: export/cormani.tar.xz
 	sudo rm -rf /var/lib/manatee/{data,registry,vert}/cormani*
