@@ -1,6 +1,7 @@
 PATH "export/data/cormani-brut-lat"
-VERTICAL "cormani-brut-lat.vert"
+VERTICAL "/var/lib/manatee/vert/cormani-brut-lat.vert"
 ENCODING "utf-8"
+LANGUAGE "Corpus Maninka de référence (partie latin)"
 LOCALE "emk_GN"
 INFO "Maninka Automatically Parsed corpus (non-disambiguated)\nRelease 0.1, 2015.05.12\nmore info at http://www......"
 INFOHREF "http://mandelang.org/cormani"
