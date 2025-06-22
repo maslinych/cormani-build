@@ -1,4 +1,4 @@
-DOCKERHOST := cormande
+DOCKERHOST := thot
 localarch := export
 remoteroot := corpora
 remotearch := setup
@@ -27,7 +27,7 @@ $(localarch)/$(archfile): exportfiles
 
 pack-files: $(localarch)/$(archfile)
 
-upload-files: pack-files
+upload-files: $(localarch)/$(archfile)
 	rsync -avP -e ssh $(localarch)/$(archfile) $(DOCKERHOST):$(remotearch)
 	ssh $(DOCKERHOST) 'tar xvf $(remotearch)/$(archfile) -C $(remoteroot)'
 
