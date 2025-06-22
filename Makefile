@@ -53,14 +53,14 @@ latfiles := $(patsubst %.html,%,$(parshtmllatfiles))
 
 corpbasename := cormani
 corpsite := cormani
-corpora := cormani-brut-nko cormani-brut-lat
+corpora := cormani-brut-nko cormani-brut-lat cormani-net
 corpora-vert := $(addsuffix .vert, $(corpora))
 compiled := $(patsubst %,export/data/%/word.lex,$(corpora))
 ## Remote corpus installation data
 corpsite-cormani := cormani
-corpora-cormani := cormani-brut-nko cormani-brut-lat
+corpora-cormani := cormani-brut-nko cormani-brut-lat cormani-net
 
-include remote.mk
+include docker.mk
 
 .PRECIOUS: $(parshtmlfiles) $(parshtmllatfiles) $(compiled)
 .PHONY: test
@@ -81,6 +81,12 @@ compile: $(corpora-vert)
 
 %.dis.vert: %.dis.html %.dis.dbs
 	$(daba2vert) "$<" --unique --convert --keepsource > "$@"
+
+%.conll: %.nko.pars.html
+	$(daba2vert) "$<" --unique --convert --conll -N --tonal > "$@"
+
+%.nko_lat.txt: %.nko.pars.html
+	$(PARSER) -z nko -s nko -N --convert --format txt -i "$<" -o "$@"
 
 %.vert: config/%
 	mkdir -p export/$*/data
@@ -146,13 +152,13 @@ resources: $(dictionaries) $(grammar) $(dabafiles)
 	touch $@
 
 makedirs:
-	find $(SRC) -type d | sed 's,$(SRC)/,,' | fgrep -v .git | xargs -n1 mkdir -p
+	find $(SRC) -type d | sed 's,$(SRC)/,,' | grep -F -v .git | xargs -n1 mkdir -p
 
 run.dabased: $(addsuffix .dbs,$(netfiles))
 
 cormani-brut-nko.vert: $(addsuffix .vert,$(brutfiles))
-	rm -f $@
-	echo "$(sort $^)" | tr ' ' '\n' | while read f ; do cat "$$f" >> $@ ; done
+	$(file >$@) $(foreach f,$(sort $^),$(shell cat $f >> $@))
+	@true
 
 cormani-brut-lat.vert: $(addsuffix .vert,$(latfiles))
 	rm -f $@ $@.nonko $@.nko
@@ -162,6 +168,10 @@ cormani-brut-lat.vert: $(addsuffix .vert,$(latfiles))
 
 cormani-brut-nko-ltr.vert:
 	touch $@
+
+cormani-net.vert: $(addsuffix .vert,$(netfiles))
+	$(file >$@) $(foreach f,$(sort $^),$(shell cat $f >> $@))
+	@true
 
 reparse-net: $(addsuffix .pars.html,$(netfiles))
 
@@ -215,6 +225,10 @@ corpsize: $(corpora-vert)
 
 repertoire:
 	for i in *.xlsx ; do ssconvert $i ${i%%.xlsx}.csv ; done
+
+conll: $(parshtmlfiles:nko.pars.html=conll)
+
+nkolat: $(parshtmlfiles:nko.pars.html=nko_lat.txt)
 
 
 clean: clean-vert clean-parse clean-pars
