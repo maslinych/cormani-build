@@ -7,21 +7,27 @@ configfiles := $(patsubst %,config/%,$(corplist))
 corpvertfiles := $(patsubst %,%.vert,$(corplist))
 #corpprlfiles := corbama-bam-fra.prl corbama-fra-bam.prl corbama-bam-fra2.prl corbama-fra2-bam.prl
 archfile := cormani.tar.xz 
+exportflag := $(localarch)/.exported
 
-exportfiles: $(configfiles) $(corpvertfiles)
+$(exportflag): $(configfiles) $(corpvertfiles)
 	rm -f $(localarch)/registry/*
 	rm -f $(localarch)/vert/*
 	cp -f $(configfiles) $(localarch)/registry
 	cp -f $(corpvertfiles) $(localarch)/vert
+	touch $(exportflag)
 
-docker-local:
+exportfiles: $(exportflag)
+
+docker-local: exportfiles
 	docker run -dit --name $(corpsite) -v $$(pwd)/$(localarch)/vert:/var/lib/manatee/vert -v $$(pwd)/$(localarch)/registry:/var/lib/manatee/registry -p 127.0.0.1:8088:8080 -e CORPLIST="$(corplist)" maslinych/noske-alt:2.142-alt1
 
-pack-files: 
+$(localarch)/$(archfile): exportfiles
 	rm -f $(localarch)/$(archfile)
 	tar cJvf $(localarch)/$(archfile) $(localarch)/registry $(localarch)/vert
 
-upload-files: 
+pack-files: $(localarch)/$(archfile)
+
+upload-files: pack-files
 	rsync -avP -e ssh $(localarch)/$(archfile) $(DOCKERHOST):$(remotearch)
 	ssh $(DOCKERHOST) 'tar xvf $(remotearch)/$(archfile) -C $(remoteroot)'
 

@@ -55,7 +55,6 @@ corpbasename := cormani
 corpsite := cormani
 corpora := cormani-brut-nko cormani-brut-lat cormani-net
 corpora-vert := $(addsuffix .vert, $(corpora))
-compiled := $(patsubst %,export/data/%/word.lex,$(corpora))
 ## Remote corpus installation data
 corpsite-cormani := cormani
 corpora-cormani := cormani-brut-nko cormani-brut-lat cormani-net
@@ -180,14 +179,6 @@ reparse-net-vert: $(addsuffix .pars.non-tonal.vert,$(netfiles)) $(addsuffix .par
 freqlist.txt: cormani-brut-nko-tonal.vert
 	python freqlist.py $< > $@
 
-export/data/%/word.lex: config/% %.vert
-	rm -rf export/data/$*
-	rm -f export/registry/$*
-	mkdir -p $(@D)
-	mkdir -p export/registry
-	encodevert -c ./$< -p $(@D) $*.vert
-	cp $< export/registry
-	sed -i '/^PATH/s,export,/var/lib/manatee,' export/registry/$*
 
 cormani-dist.zip:
 	git archive -o cormani-dist.zip --format=zip HEAD
@@ -197,14 +188,6 @@ cormani-dist.tar.xz:
 
 dist-zip: cormani-dist.zip
 
-dist: $(compiled)
-	echo $<	
-
-dist-print:
-	echo $(foreach corpus,$(corpora),export/data/$(corpus)/word.lex)
-
-export/cormani.tar.xz: $(compiled)
-	pushd export ; tar cJvf cormani.tar.xz --mode='a+r' * ; popd
 
 test:
 	$(MAKE) -C sharness

@@ -20,7 +20,6 @@ ATTRIBUTE tag {
 ATTRIBUTE gloss {
     MULTIVALUE yes
     MULTISEP "|"
-    LOCALE "fr_FR"
 }
 ATTRIBUTE parts {
     MULTIVALUE yes
