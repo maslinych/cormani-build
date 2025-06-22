@@ -1,4 +1,4 @@
-PATH "export/data/cormani-brut-nko"
+PATH "/var/lib/manatee/data/cormani-brut-nko"
 VERTICAL "/var/lib/manatee/vert/cormani-brut-nko.vert"
 ENCODING "utf-8"
 LANGUAGE "Corpus Maninka de Référence (partie Nko)

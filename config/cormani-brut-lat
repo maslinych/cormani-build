@@ -1,4 +1,4 @@
-PATH "export/data/cormani-brut-lat"
+PATH "/var/lib/manatee/data/cormani-brut-lat"
 VERTICAL "/var/lib/manatee/vert/cormani-brut-lat.vert"
 ENCODING "utf-8"
 LANGUAGE "Corpus Maninka de référence (partie latin)"
