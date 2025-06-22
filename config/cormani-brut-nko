@@ -1,7 +1,7 @@
 PATH "/var/lib/manatee/data/cormani-brut-nko"
 VERTICAL "/var/lib/manatee/vert/cormani-brut-nko.vert"
 ENCODING "utf-8"
-LANGUAGE "Corpus Maninka de Référence (partie Nko)
+LANGUAGE "Corpus Maninka de Référence (partie Nko)"
 LOCALE "emk_GN"
 RIGHTTOLEFT 1
 INFO "Maninka Automatically Parsed corpus (non-disambiguated)\nRelease 0.1, 2015.05.12\nmore info at http://www......"
@@ -21,7 +21,6 @@ ATTRIBUTE tag {
 ATTRIBUTE gloss {
     MULTIVALUE yes
     MULTISEP "|"
-    LOCALE "fr_FR"
 }
 ATTRIBUTE parts {
     MULTIVALUE yes
